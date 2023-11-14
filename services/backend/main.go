@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 )
 
 func main() {
@@ -16,6 +19,23 @@ func main() {
 			time.Sleep((time.Second)) // todo hack sleep a second to check if it's ok
 			resp = []byte(`{"text": "updated"}`)
 			rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		} else if req.URL.Path == "/socket" {
+			conn, _, _, err := ws.UpgradeHTTP(req, rw)
+			if err != nil {
+				log.Println("Error with WebSocket: ", err)
+				rw.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+			go func() {
+				defer conn.Close()
+				time.Sleep(time.Second)
+				err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(`{"text": "from-websocket"}`))
+				if err != nil {
+					log.Println("error writing WebSocket data: ", err)
+					return
+				}
+			}()
+			return
 		} else if req.URL.Path == "/username" {
 			resp = []byte(`{"username": "colin"}`)
 		} else {

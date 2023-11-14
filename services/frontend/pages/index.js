@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import HandlerDisplay from '../components/HandlerDisplay';
+import WebsocketTester from '../components/WebsocketTester';
 
 export async function getServerSideProps() {
   const { initialData } = await fetch("http://localhost:8000/handler-initial-data").then(x => x.json());
@@ -25,6 +26,7 @@ export default function Home({ data }) {
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
         <HandlerDisplay data={data} />
+        <WebsocketTester startData={data} />
       </main>
     </div>
   )
