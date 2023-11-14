@@ -1,5 +1,6 @@
 
 
+import TextEditor from './TextEditor'
 import React, { useState, useEffect } from 'react'
 
 function WebsocketTester({ startData }) {
@@ -11,7 +12,8 @@ function WebsocketTester({ startData }) {
     newWs.onopen = () => setWs(newWs)
     newWs.onmessage = msg => setData(JSON.parse(msg.data))
     return () => {
-      newWs.close()
+      // newWs.close()
+      // todo this was causing issues
     }
   }, [])
 
@@ -23,6 +25,7 @@ function WebsocketTester({ startData }) {
       </h2>
 
       <div>Data is: {JSON.stringify(data)}</div>
+      {ws && <TextEditor ws={ws} startText={data} />}
     </div>
   )
 }

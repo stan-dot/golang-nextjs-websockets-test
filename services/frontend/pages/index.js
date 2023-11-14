@@ -2,6 +2,7 @@ import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import HandlerDisplay from '../components/HandlerDisplay';
 import WebsocketTester from '../components/WebsocketTester';
+import TextEditor from '../components/TextEditor';
 
 export async function getServerSideProps() {
   const { initialData } = await fetch("http://localhost:8000/handler-initial-data").then(x => x.json());
