@@ -1,18 +1,17 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
+import HandlerDisplay from '../components/HandlerDisplay';
 
 export async function getServerSideProps() {
-  const {status} = await fetch("http://localhost:8000/status").then(x => x.json());
-  const {username} = await fetch("http://localhost:8000/username").then(x => x.json());
+  const { initialData } = await fetch("http://localhost:8000/handler-initial-data").then(x => x.json());
   return {
     props: {
-      status: status,
-      username: username,
+      data: initialData ?? null,
     }
   }
 }
 
-export default function Home({status, username}) {
+export default function Home({ data }) {
   return (
     <div className={styles.container}>
       <Head>
@@ -25,7 +24,7 @@ export default function Home({status, username}) {
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
-        <div>Status is: {status}, your username is: {username}</div>
+        <HandlerDisplay data={data} />
       </main>
     </div>
   )

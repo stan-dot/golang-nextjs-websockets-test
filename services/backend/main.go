@@ -4,13 +4,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
 	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		var resp []byte
-		if req.URL.Path == "/status" {
-			resp = []byte(`{"status": "ok"}`)
+		if req.URL.Path == "/handler-initial-data" {
+			resp = []byte(`{"text": "initial"}`)
+		} else if req.URL.Path == "/handler" {
+			time.Sleep((time.Second)) // todo hack sleep a second to check if it's ok
+			resp = []byte(`{"text": "updated"}`)
+			rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		} else if req.URL.Path == "/username" {
 			resp = []byte(`{"username": "colin"}`)
 		} else {
