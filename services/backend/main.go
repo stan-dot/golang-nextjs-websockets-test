@@ -1,53 +1,65 @@
 package main
 
 import (
-	"fmt"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
 )
 
-func main() {
-	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		var resp []byte
-		if req.URL.Path == "/handler-initial-data" {
-			resp = []byte(`{"text": "initial"}`)
-		} else if req.URL.Path == "/handler" {
-			time.Sleep((time.Second)) // todo hack sleep a second to check if it's ok
-			resp = []byte(`{"text": "updated"}`)
-			rw.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		} else if req.URL.Path == "/socket" {
-			conn, _, _, err := ws.UpgradeHTTP(req, rw)
-			if err != nil {
-				log.Println("Error with WebSocket: ", err)
-				rw.WriteHeader(http.StatusMethodNotAllowed)
-				return
-			}
-			go func() {
-				defer conn.Close()
-				time.Sleep(time.Second)
-				err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(`{"text": "from-websocket"}`))
-				if err != nil {
-					log.Println("error writing WebSocket data: ", err)
-					return
-				}
-			}()
-			return
-		} else if req.URL.Path == "/username" {
-			resp = []byte(`{"username": "colin"}`)
-		} else {
-			rw.WriteHeader(http.StatusNotFound)
-			return
-		}
+func setupRouter() *gin.Engine {
 
-		rw.Header().Set("Content-Type", "application/json")
-		rw.Header().Set("Content-Length", fmt.Sprint(len(resp)))
-		rw.Write(resp)
+	r := gin.Default()
+	config := cors.DefaultConfig()
+	log.Println(config)
+	config.AllowOrigins = []string{"http://localhost:3000"}
+	r.Use(cors.New(config))
+
+	// Ping test
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(http.StatusOK, "pong")
 	})
 
+	r.GET("/handler-initial-data", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"text": "initial"})
+	})
+
+	r.GET("/handler", func(c *gin.Context) {
+		// todo make sure CORS is ok
+		c.JSON(http.StatusOK, gin.H{"text": "updated"})
+	})
+
+	r.GET("/socket", func(c *gin.Context) {
+		conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
+		if err != nil {
+			log.Println("error with WebSOcket: ", err)
+			c.Writer.WriteHeader(http.StatusMethodNotAllowed)
+			// todo not sure is ok
+			return
+		}
+		go func() {
+			defer conn.Close()
+			time.Sleep(time.Second)
+			err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(`{"text": "from-websocket-in-gin"}`))
+			if err != nil {
+				log.Println("error writing WebSocket data: ", err)
+				return
+			}
+		}()
+		return
+	})
+
+	// that for custom 404
+	// r.NoRoute()
 	log.Println("Server is available at http://localhost:8000")
-	log.Fatal(http.ListenAndServe(":8000", handler))
+	return r
+}
+
+func main() {
+	r := setupRouter()
+	// Listen and Server in 0.0.0.0:8000
+	r.Run(":8000")
 }

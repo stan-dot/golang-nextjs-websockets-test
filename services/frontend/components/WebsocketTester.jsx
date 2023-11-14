@@ -16,7 +16,11 @@ function WebsocketTester({ startData }) {
   }, [])
 
   return (
-    <div>WebsocketTester
+    <div>
+
+      <h2>
+        WebsocketTester
+      </h2>
 
       <div>Data is: {JSON.stringify(data)}</div>
     </div>
